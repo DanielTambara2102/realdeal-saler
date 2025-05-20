@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block title %}Produtos Vendidos{% endblock %}
+
+{% block content %}
+    <h1 class="text-center mb-4">Produtos Vendidos</h1>
+    <table class="table table-striped table-dark table-bordered table-hover shadow-sm">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Marca</th>
+                <th>Nome</th>
+                <th>Preço de Compra</th>
+                <th>Dt. Compra</th>
+                <th>Manutenção</th>
+                <th>Frete</th>
+                <th>Custos Extras</th>
+                <th>Dt. Venda</th>
+                <th>Preço de Venda</th>
+                <th>Lucro</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for produto in produtos if produto.status == 'Vendido' %}
+            <tr>
+                <td>{{ produto.id }}</td>
+                <td>{{ produto.marca }}</td>
+                <td>{{ produto.nome }}</td>
+                <td>R$ {{ '%.2f' | format(produto.preco) }}</td>
+                <td>{{ produto.data_compra.strftime('%d/%m/%Y') }}</td>
+                <td>{{ 'R$ %.2f' | format(produto.custo_manutencao) if produto.custo_manutencao else '---' }}</td>
+                <td>{{ 'R$ %.2f' | format(produto.custo_frete) if produto.custo_frete else '---' }}</td>
+                <td>{{ 'R$ %.2f' | format(produto.custos_extras) if produto.custos_extras else '---' }}</td>
+                <td>{{ produto.data_venda.strftime('%d/%m/%Y') if produto.data_venda else '---' }}</td>
+                <td>{{ 'R$ %.2f' | format(produto.preco_venda) if produto.preco_venda else '---' }}</td>
+                <td>{{ 'R$ %.2f' | format(produto.lucro) if produto.lucro else '---' }}</td>
+                <td>
+                    <span class="badge bg-secondary">{{ produto.status }}</span>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

@@ -1,0 +1,290 @@
+{% extends 'base.html' %}
+
+{% block title %}Estoque{% endblock %}
+
+{% block content %}
+    <div class="mb-4 text-center">
+        <h1>Produtos em Estoque</h1>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <!-- Botões para mudar status -->
+        <form method="POST" action="{{ url_for('main.processar_selecao') }}" class="d-inline-flex gap-2" id="formStatus">
+            <input type="hidden" name="produto_selecionado" id="produto_selecionado_hidden" value="">
+            <button type="button" class="btn btn-success" disabled id="btn-disponivel">
+              Disponibilizar
+            </button>
+            <button type="button" class="btn btn-warning text-dark" disabled id="btn-manutencao">
+                Manutenção
+            </button>
+            <button type="button" class="btn btn-secondary" disabled id="btn-vendido">
+                Vender
+            </button>
+        </form>
+
+        <!-- Filtro de status -->
+        <form method="GET" action="{{ url_for('main.estoque') }}">
+            <div class="input-group w-auto">
+                <label class="input-group-text" for="status">Status:</label>
+                <select name="status" id="status" onchange="this.form.submit()" class="form-select">
+                    <option value="Todos" {% if status_filtro == 'Todos' %}selected{% endif %}>Todos</option>
+                    <option value="Disponivel" {% if status_filtro == 'Disponivel' %}selected{% endif %}>Disponível</option>
+                    <option value="Em Manutenção" {% if status_filtro == 'Em Manutenção' %}selected{% endif %}>Em Manutenção</option>
+                </select>
+            </div>
+        </form>
+    </div>
+
+    <!-- Tabela de produtos -->
+    <form method="POST" action="{{ url_for('main.processar_selecao') }}">
+        <table class="table table-striped table-dark table-bordered table-hover shadow-sm">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>ID</th>
+                    <th>Marca</th>
+                    <th>Nome</th>
+                    <th>Preço</th>
+                    <th>Data de Compra</th>
+                    <th>Custo de Manutenção</th>
+                    <th>Preço Sugerido</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for produto in produtos %}
+                <tr
+                    data-custo-manutencao="{{ produto.custo_manutencao if produto.custo_manutencao else '' }}"
+                    data-valor-venda-sugerido="{{ produto.valor_venda_sugerido }}"
+                >
+                    <td class="align-middle text-center">
+                        <input type="radio" name="produto_selecionado_radio" value="{{ produto.id }}">
+                    </td>
+                    <td>{{ produto.id }}</td>
+                    <td>{{ produto.marca }}</td>
+                    <td>{{ produto.nome }}</td>
+                    <td>R$ {{ "{:,.2f}".format(produto.preco).replace(",", "v").replace(".", ",").replace("v", ".") }}</td>
+                    <td>{{ produto.data_compra.strftime('%d/%m/%Y') }}</td>
+                    <td>
+                        {% if produto.custo_manutencao %}
+                            R$ {{ "{:,.2f}".format(produto.custo_manutencao).replace(",", "v").replace(".", ",").replace("v", ".") }}
+                        {% else %}
+                            ---
+                        {% endif %}
+                    </td>
+                    <td>R$ {{ "{:,.2f}".format(produto.valor_venda_sugerido).replace(",", "v").replace(".", ",").replace("v", ".") }}</td>                 
+                    <td>
+                        {% if produto.status == 'Disponivel' %}
+                            <span class="badge bg-success">{{ produto.status }}</span>
+                        {% elif produto.status == 'Em Manutenção' %}
+                            <span class="badge bg-warning text-dark">{{ produto.status }}</span>
+                        {% elif produto.status == 'Vendido' %}
+                            <span class="badge bg-secondary">{{ produto.status }}</span>
+                        {% else %}
+                            <span class="badge bg-light text-dark">{{ produto.status }}</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </form>
+
+    <!-- Modal Manutenção -->
+    <div class="modal fade" id="modalManutencao" tabindex="-1" aria-labelledby="modalManutencaoLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <form method="POST" action="{{ url_for('main.processar_selecao') }}" id="formManutencao">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalManutencaoLabel">Custo de Manutenção</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" name="produto_selecionado" id="produto_selecionado_modal">
+                        <input type="hidden" name="novo_status" value="Em Manutenção">
+
+                        <div class="mb-3">
+                            <label for="custo_manutencao" class="form-label">Valor do custo de manutenção (R$):</label>
+                            <input type="number" step="0.01" min="0" class="form-control" id="custo_manutencao" name="custo_manutencao" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-warning">Salvar</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Venda -->
+    <div class="modal fade" id="modalVenda" tabindex="-1" aria-labelledby="modalVendaLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <form method="POST" action="{{ url_for('main.processar_selecao') }}" id="formVenda">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalVendaLabel">Venda do Produto</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" name="produto_selecionado" id="produto_selecionado_venda">
+                        <input type="hidden" name="novo_status" value="Vendido">
+
+                        <div class="mb-3">
+                            <label for="custo_frete" class="form-label">Custo de Frete (R$):</label>
+                            <input type="number" step="0.01" min="0" class="form-control" id="custo_frete" name="custo_frete" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="custos_extras" class="form-label">Custos Extras (R$):</label>
+                            <input type="number" step="0.01" min="0" class="form-control" id="custos_extras" name="custos_extras" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="data_venda" class="form-label">Data de Venda:</label>
+                            <input type="date" class="form-control" id="data_venda" name="data_venda" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="preco_venda" class="form-label">Preço de Venda (R$):</label>
+                            <input type="number" step="0.01" min="0" class="form-control" id="preco_venda" name="preco_venda" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-secondary">Confirmar Venda</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Disponibilizar -->
+    <div class="modal fade" id="modalDisponibilizar" tabindex="-1" aria-labelledby="modalDisponibilizarLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <form method="POST" action="{{ url_for('main.processar_selecao') }}" id="formDisponibilizar">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalDisponibilizarLabel">Disponibilizar Produto</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" name="produto_selecionado" id="produto_selecionado_disponibilizar">
+                        <input type="hidden" name="novo_status" value="Disponivel">
+
+                        <div class="mb-3">
+                            <label for="custo_manutencao_disp" class="form-label">Custo de Manutenção (R$):</label>
+                            <input type="number" step="0.01" min="0" class="form-control" id="custo_manutencao_disp" name="custo_manutencao" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="preco_sugerido_disp" class="form-label">Preço Sugerido de Venda (R$):</label>
+                            <input type="number" step="0.01" min="0" class="form-control" id="preco_sugerido_disp" name="valor_venda_sugerido" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-success">Confirmar</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>  
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const radios = document.querySelectorAll('input[name="produto_selecionado_radio"]');
+        const btnDisponivel = document.getElementById('btn-disponivel');
+        const btnManutencao = document.getElementById('btn-manutencao');
+        const btnVendido = document.getElementById('btn-vendido');
+        const produtoHidden = document.getElementById('produto_selecionado_hidden');
+
+        // Mapeia status de cada produto
+        const statusPorProduto = {};
+        document.querySelectorAll('tbody tr').forEach(row => {
+            const id = row.querySelector('input[name="produto_selecionado_radio"]').value;
+            const statusText = row.querySelector('td:last-child span').textContent.trim();
+            statusPorProduto[id] = statusText;
+        });
+
+        radios.forEach(radio => {
+            radio.addEventListener('change', () => {
+                const idSelecionado = radio.value;
+                produtoHidden.value = idSelecionado;
+
+                btnDisponivel.disabled = false;
+                btnManutencao.disabled = false;
+                btnVendido.disabled = false;
+
+                const statusAtual = statusPorProduto[idSelecionado];
+
+                if (statusAtual === 'Disponivel') {
+                    btnDisponivel.disabled = true;
+                } else if (statusAtual === 'Em Manutenção') {
+                    btnManutencao.disabled = true;
+                    btnVendido.disabled = true;
+                } else if (statusAtual === 'Vendido') {
+                    btnVendido.disabled = true;
+                }
+            });
+        });
+
+        const modalManutencao = new bootstrap.Modal(document.getElementById('modalManutencao'));
+        const produtoModalHidden = document.getElementById('produto_selecionado_modal');
+
+        btnManutencao.addEventListener('click', () => {
+            if (!produtoHidden.value) {
+                alert('Selecione um produto primeiro.');
+                return;
+            }
+            produtoModalHidden.value = produtoHidden.value;
+            document.getElementById('custo_manutencao').value = 0;
+            modalManutencao.show();
+        });
+
+        const modalVenda = new bootstrap.Modal(document.getElementById('modalVenda'));
+        const produtoVendaHidden = document.getElementById('produto_selecionado_venda');
+
+        btnVendido.addEventListener('click', () => {
+            if (!produtoHidden.value) {
+                alert('Selecione um produto primeiro.');
+                return;
+            }
+            produtoVendaHidden.value = produtoHidden.value;
+            document.getElementById('custo_frete').value = '';
+            document.getElementById('custos_extras').value = '';
+            document.getElementById('data_venda').value = '';
+            document.getElementById('preco_venda').value = '';
+            modalVenda.show();
+        });
+
+        const modalDisponibilizar = new bootstrap.Modal(document.getElementById('modalDisponibilizar'));
+        const produtoDisponibilizarHidden = document.getElementById('produto_selecionado_disponibilizar');
+        const custoManutencaoInput = document.getElementById('custo_manutencao_disp');
+        const precoSugeridoInput = document.getElementById('preco_sugerido_disp');
+
+        btnDisponivel.addEventListener('click', () => {
+            if (!produtoHidden.value) {
+                alert('Selecione um produto primeiro.');
+                return;
+            }
+            // Encontra a linha do produto selecionado
+            const linhaSelecionada = Array.from(document.querySelectorAll('input[name="produto_selecionado_radio"]'))
+                .find(radio => radio.checked)
+                .closest('tr');
+
+            // Pega os valores dos atributos data
+            const custoAtual = linhaSelecionada.getAttribute('data-custo-manutencao') || 0;
+            const valorAtual = linhaSelecionada.getAttribute('data-valor-venda-sugerido') || 0;
+
+            produtoDisponibilizarHidden.value = produtoHidden.value;
+            custoManutencaoInput.value = custoAtual;
+            precoSugeridoInput.value = valorAtual;
+
+            modalDisponibilizar.show();
+        });
+    });
+</script>
+{% endblock %}

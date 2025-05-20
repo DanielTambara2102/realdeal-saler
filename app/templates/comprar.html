@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}Registrar Compra de Produto{% endblock %}
+
+{% block content %}
+<h1 class="text-center mb-4">Registrar Compra de Produto</h1>
+
+<div class="card bg-dark text-white shadow p-4 mx-auto" style="max-width: 600px;">
+    <form method="POST" action="{{ url_for('main.comprar') }}">
+        <div class="mb-3">
+            <label class="form-label" for="marca">Marca:</label>
+            <input type="text" class="form-control bg-secondary text-light border-0" name="marca" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="nome">Nome:</label>
+            <input type="text" class="form-control bg-secondary text-light border-0" name="nome" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="preco">Valor de Compra:</label>
+            <input type="number" class="form-control bg-secondary text-light border-0" name="preco" step="0.01" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="valor_venda_sugerido">Preço Sugerido:</label>
+            <input type="number" class="form-control bg-secondary text-light border-0" name="valor_venda_sugerido" step="0.01" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="data_compra">Data da Compra:</label>
+            <input type="date" class="form-control bg-secondary text-light border-0" name="data_compra" required>
+        </div>        
+        <div class="text-center mt-4">
+            <button type="submit" class="btn btn-success">Salvar</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
