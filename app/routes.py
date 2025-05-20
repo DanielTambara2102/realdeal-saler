@@ -8,6 +8,7 @@ main = Blueprint('main', __name__)
 USUARIOS = [
     {'usuario': 'admin', 'senha': '1234'},
     {'usuario': 'daniel.tambara', 'senha': '1234'},
+    {'usuario': 'eduarda.robinson', 'senha': '1234'},
     {'usuario': 'luiza.bastos', 'senha': '1234'}
 ]
 
