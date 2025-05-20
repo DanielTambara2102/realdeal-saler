@@ -4,7 +4,7 @@ from app.models import Produto
 app = create_app()
 
 with app.app_context():
-    id_para_excluir = 4  # substitua pelo id do produto que quer excluir
+    id_para_excluir = 1  # substitua pelo id do produto que quer excluir
 
     produto = Produto.query.get(id_para_excluir)
     if produto:

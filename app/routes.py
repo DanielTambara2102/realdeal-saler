@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 from .models import Produto
 from datetime import datetime
+from collections import defaultdict
 
 main = Blueprint('main', __name__)
 
@@ -143,12 +144,14 @@ def processar_selecao():
 
 
 
+from collections import defaultdict
+from datetime import datetime
+
 @main.route('/financeiro')
 def financeiro():
     produtos = Produto.query.all()
 
     capital_investido = 70000.00
-
     estoque_produtos = [p for p in produtos if p.status in ['Disponivel', 'Em Manutenção']]
     valor_estoque = sum(p.preco for p in estoque_produtos)
     custo_manutencao_estoque = sum((p.custo_manutencao or 0) for p in estoque_produtos)
@@ -160,17 +163,36 @@ def financeiro():
     )
 
     saldo_disponivel = capital_investido - (valor_estoque + custo_manutencao_estoque) + lucro_total
-
     lucro_percentual = (lucro_total / capital_investido * 100) if capital_investido > 0 else 0
+
+    # 🧠 Lógica para montar os dados do gráfico
+    compras_por_mes = defaultdict(int)
+    vendas_por_mes = defaultdict(int)
+
+    for p in produtos:
+        if p.data_compra:
+            mes = p.data_compra.strftime('%Y-%m')
+            compras_por_mes[mes] += 1
+        if p.data_venda:
+            mes = p.data_venda.strftime('%Y-%m')
+            vendas_por_mes[mes] += 1
+
+    todos_meses = sorted(set(compras_por_mes) | set(vendas_por_mes))
+    labels = [datetime.strptime(m, "%Y-%m").strftime("%b/%Y") for m in todos_meses]
+    compras_list = [compras_por_mes[m] for m in todos_meses]
+    vendas_list = [vendas_por_mes[m] for m in todos_meses]
 
     return render_template(
         'financeiro.html',
-        valor_estoque=valor_estoque,
         capital_investido=capital_investido,
+        valor_estoque=valor_estoque,
         custo_manutencao_estoque=custo_manutencao_estoque,
         lucro_total=lucro_total,
         lucro_percentual=lucro_percentual,
-        saldo_disponivel=saldo_disponivel
+        saldo_disponivel=saldo_disponivel,
+        labels=labels,
+        compras_list=compras_list,
+        vendas_list=vendas_list
     )
 
 

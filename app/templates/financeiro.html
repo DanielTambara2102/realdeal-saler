@@ -56,4 +56,82 @@
         </div>
     </div>
 </div>
+
+<hr class="my-5">
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-body p-3">
+                <h5 class="card-title text-center mb-3">Compras e Vendas Mensais</h5>
+                <canvas id="graficoBolsas" style="max-height: 400px;"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+<script>
+    const ctx = document.getElementById('graficoBolsas').getContext('2d');
+
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: {{ labels | default([]) | tojson }},
+            datasets: [
+                {
+                    label: 'Compradas',
+                    data: {{ compras_list | default([]) | tojson }},
+                    backgroundColor: 'rgba(44, 62, 80, 0.8)'  // Azul escuro
+                },
+                {
+                    label: 'Vendidas',
+                    data: {{ vendas_list | default([]) | tojson }},
+                    backgroundColor: 'rgba(39, 174, 96, 0.8)'  // Verde escuro
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        boxWidth: 16,
+                        padding: 10
+                    }
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false
+                },
+                datalabels: {
+                    color: '#111',
+                    anchor: 'end',
+                    align: 'start',
+                    font: {
+                        weight: 'bold',
+                        size: 12
+                    },
+                    formatter: Math.round
+                }
+            },
+            scales: {
+                y: {
+                    display: false,
+                    grid: { display: false }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { maxRotation: 0 },
+                    title: { display: false }
+                }
+            }
+        },
+        plugins: [ChartDataLabels]
+    });
+</script>
 {% endblock %}
