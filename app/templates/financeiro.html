@@ -1,17 +1,59 @@
 {% extends 'base.html' %}
 
-{% block title %}Financeiro{% endblock %}
+{% block title %}Dashboard{% endblock %}
 
 {% block content %}
-<h1 class="text-center mb-4">Financeiro</h1>
+<h2 class="mb-4 text-center">Financeiro</h2>
 
-<div class="text-center">
-    <img src="https://www.svgrepo.com/show/331981/under-construction.svg" 
-         alt="Página em construção" 
-         style="width: 180px; margin-bottom: 20px; opacity: 0.8;" />
+<div class="row text-center mb-4">
+    <div class="col-md-3">
+        <div class="card border-warning shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">Capital Inicial Investido</h5>
+                <p class="card-text fs-4 text-warning">
+                    R$ {{ "{:,.2f}".format(capital_investido).replace(",", "X").replace(".", ",").replace("X", ".") }}
+                </p>
+            </div>
+        </div>
+    </div>
 
-    <p style="font-size: 1.2rem; color: #888;">
-        Esta página está em construção. Em breve, mais informações estarão disponíveis.
-    </p>
+    <div class="col-md-3">
+        <div class="card border-primary shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">Saldo Disponível</h5>
+                <p class="card-text fs-4 text-primary">
+                    R$ {{ "{:,.2f}".format(saldo_disponivel).replace(",", "X").replace(".", ",").replace("X", ".") }}
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card border-info shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">Lucro Total</h5>
+                <p class="card-text fs-4 d-flex justify-content-center align-items-baseline gap-2 mb-0">
+                    <span class="text-info">
+                        R$ {{ "{:,.2f}".format(lucro_total).replace(",", "X").replace(".", ",").replace("X", ".") }}
+                    </span>
+                    <span class="{% if lucro_percentual >= 0 %}text-success{% else %}text-danger{% endif %} fs-6">
+                        {% if lucro_percentual >= 0 %}+{% endif %}
+                        {{ "{:.2f}".format(lucro_percentual).replace(".", ",") }}%
+                    </span>
+                </p>
+            </div>
+        </div>  
+    </div>
+
+    <div class="col-md-3">
+        <div class="card border-success shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">Valor em Estoque</h5>
+                <p class="card-text fs-4 text-success">
+                    R$ {{ "{:,.2f}".format(valor_estoque).replace(",", "X").replace(".", ",").replace("X", ".") }}
+                </p>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}

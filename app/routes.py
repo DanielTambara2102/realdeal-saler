@@ -143,13 +143,35 @@ def processar_selecao():
 
 
 
-@main.route('/financeiro', methods=['GET', 'POST'])
+@main.route('/financeiro')
 def financeiro():
-    if 'usuario_logado' not in session:
-        return redirect(url_for('main.login'))
+    produtos = Produto.query.all()
 
-    return render_template('financeiro.html')
+    capital_investido = 70000.00
 
+    estoque_produtos = [p for p in produtos if p.status in ['Disponivel', 'Em Manutenção']]
+    valor_estoque = sum(p.preco for p in estoque_produtos)
+    custo_manutencao_estoque = sum((p.custo_manutencao or 0) for p in estoque_produtos)
+
+    lucro_total = sum(
+        (p.lucro or 0)
+        for p in produtos
+        if p.status != 'Disponivel' and p.lucro is not None
+    )
+
+    saldo_disponivel = capital_investido - (valor_estoque + custo_manutencao_estoque) + lucro_total
+
+    lucro_percentual = (lucro_total / capital_investido * 100) if capital_investido > 0 else 0
+
+    return render_template(
+        'financeiro.html',
+        valor_estoque=valor_estoque,
+        capital_investido=capital_investido,
+        custo_manutencao_estoque=custo_manutencao_estoque,
+        lucro_total=lucro_total,
+        lucro_percentual=lucro_percentual,
+        saldo_disponivel=saldo_disponivel
+    )
 
 
 @main.route('/comprar', methods=['GET', 'POST'])
