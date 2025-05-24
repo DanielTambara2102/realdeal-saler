@@ -1,6 +1,11 @@
+import os  # ✅ agora sim!
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
+from dotenv import load_dotenv  # opcional, mas recomendado
+
+# Carrega variáveis do .env se existir
+load_dotenv()
 
 # Inicializações globais
 db = SQLAlchemy()
@@ -11,10 +16,10 @@ def create_app():
 
     # Segurança e controle de sessão
     app.secret_key = "minha_chave_secreta"
-    app.config['SESSION_PERMANENT'] = False  # Sessão expira ao fechar navegador
-    
+    app.config['SESSION_PERMANENT'] = False
+
     # Configuração do banco de dados
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///meubanco.db'
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL') or 'sqlite:///meubanco.db'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     # Inicialização dos componentes
